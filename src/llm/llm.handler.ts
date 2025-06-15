@@ -2,7 +2,11 @@ import { extractJsonFromString, LLMPatterns, OnMessage } from '@libs/common';
 import { Injectable } from '@nestjs/common';
 import { LangchainService } from './services';
 import { AgentClass, LLMRequest } from './types';
-import { GetActionTypeAgent, GetInformationAgent, SeparateDataToChunksAgent } from './agents';
+import {
+  CreateMetadataForKnowledgeBaseAgent,
+  GetActionTypeAgent,
+  GetInformationAgent,
+} from './agents';
 
 type GenerateResponseInput = LLMRequest;
 
@@ -48,11 +52,12 @@ export class LLMHandler {
     return dataFromLLM;
   }
 
-  @OnMessage(LLMPatterns.SEPARATE_DATA_TO_CHUNKS)
-  async separateDataToChunks(input: GenerateResponseInput): Promise<string> {
-    const dataFromLLM = await this.useAgent({ agent: SeparateDataToChunksAgent, data: input });
-
-    const chunks = JSON.parse(extractJsonFromString(dataFromLLM));
+  @OnMessage(LLMPatterns.CREATE_METADATA_FOR_KNOWLEDGE_BASE)
+  async createMetadataForKnowledgeBase(input: GenerateResponseInput) {
+    const chunks = await this.useAgent({
+      agent: CreateMetadataForKnowledgeBaseAgent,
+      data: input,
+    });
 
     return chunks;
   }
