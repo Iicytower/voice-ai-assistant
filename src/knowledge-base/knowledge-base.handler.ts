@@ -37,7 +37,7 @@ export class KnowledgeBaseHandler {
   async read(payload: { prompt: string; metadataFilter?: Partial<KnowledgeEntryMetadata> }) {
     try {
       const { prompt, metadataFilter } = payload;
-      const results = await this.weaviateService.searchSimilar(prompt, 10, metadataFilter);
+      const results = await this.weaviateService.searchSimilar(prompt, 20, metadataFilter);
 
       return { success: !!results.length, results };
     } catch (error) {

@@ -115,13 +115,13 @@ export class WeaviateService implements OnModuleInit {
     limit = isNaN(Number(process.env.WEAVIATE_LIMIT)) ? Number(process.env.WEAVIATE_LIMIT) : 20,
     metadataFilter?: Partial<KnowledgeEntryMetadata>,
   ) {
+    const expandedQuery = [query, ...Object.values(metadataFilter)].join(' ');
+
     let graphqlQuery = this.client.graphql
       .get()
       .withClassName(this.className)
-      .withFields(
-        'content title source author category tags createdAt updatedAt _additional { certainty }',
-      )
-      .withNearText({ concepts: [query] })
+      .withFields('content title author category tags createdAt updatedAt')
+      .withNearText({ concepts: [expandedQuery] })
       .withLimit(limit);
 
     // Apply metadata filters if provided

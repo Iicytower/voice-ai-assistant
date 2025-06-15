@@ -17,7 +17,7 @@ export class GetInformationAgent extends BaseAgent {
         ? `
           This is context for user prompt:
           \`\`\`json
-          ${additionalData}
+          ${JSON.stringify(additionalData)}
           \`\`\`
         `
         : '',
