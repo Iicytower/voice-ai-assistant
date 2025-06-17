@@ -13,6 +13,7 @@ export type UpdateEntryRequest = {
   metadata?: KnowledgeEntryMetadata;
 };
 
+// TODO add tenats create and delete
 @Injectable()
 export class WeaviateService implements OnModuleInit {
   private client: WeaviateClient;

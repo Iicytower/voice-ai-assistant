@@ -1,2 +1,4 @@
-export type MessagePattern = string;
-export type EventPattern = string;
+import { BaseInputDto, BaseOutputDto } from './dto';
+
+export type MessageBusInputDto = new () => BaseInputDto;
+export type MessageBusOutputDto = new () => BaseOutputDto;

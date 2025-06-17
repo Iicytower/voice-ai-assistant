@@ -1,14 +1,31 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ModuleRef, DiscoveryService, MetadataScanner } from '@nestjs/core';
-import { EventPattern, MessagePattern } from './messageBus.types';
+import { MessageBusInputDto, MessageBusOutputDto } from './messageBus.types';
 import { EVENT_HANDLER, MESSAGE_HANDLER } from './messageBus.constants';
+import { instanceToPlain, plainToClass } from 'class-transformer';
+import { validateOrReject } from 'class-validator';
+import { EventPattern, MessagePattern, VALIDATION_MAP } from './comunication';
 
+/**
+ * stworzyć obiekty podobne do:
+ * { pattern: string, inputDto: MessageBusInputDto, outputDto: MessageBusOutputDto }
+ * niech dtoski będą dodawane w libsach i reszta ma się dziać pod spodem.
+ * czyli używając messageBus podajemy sam pattern, a automatycznie jest wygenerowana mapa,
+ * która po kluczu (comunication pattern) jest w stanie znaleźć input i output i zweryfikować dane
+ * 1. robimy dto input i output
+ * 2. robimy obiekt z patternem, inputDto i outputDto
+ * 3. używamy
+ *
+ * pod spodem:
+ * 1. przy starcie aplikacji jest tworzona mapa z patternami i dtoskami
+ * 2. przy wywołaniu send jest sprawdzana poprawność danych wejściowych (zgodnie z input dto)
+ * 3. przy odebraniu danych od magic boxa jest sprawdzana poprawność danych wyjściowych (zgodnie z output dto)
+ */
 @Injectable()
 export class MessageBus implements OnModuleInit {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   private messageHandlers = new Map<MessagePattern, Function>();
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   private eventHandlers = new Map<EventPattern, Function[]>();
+  private validationMap = VALIDATION_MAP;
 
   constructor(
     private readonly moduleRef: ModuleRef,
@@ -52,6 +69,7 @@ export class MessageBus implements OnModuleInit {
     if (!handler) {
       throw new Error(`No message handler for pattern "${pattern}"`);
     }
+
     return await handler(message);
   }
 
@@ -60,5 +78,21 @@ export class MessageBus implements OnModuleInit {
     for (const handler of handlers) {
       await handler(event);
     }
+  }
+
+  private getValidationMapItem(pattern: MessagePattern) {
+    return this.validationMap.get(pattern);
+  }
+
+  private async validateDto(
+    Dto: MessageBusInputDto | MessageBusOutputDto,
+    data: Record<string, any>,
+  ) {
+    const plain = instanceToPlain(data);
+    const dto = plainToClass(Dto, plain, {});
+
+    await validateOrReject(dto, { whitelist: true });
+
+    return dto;
   }
 }

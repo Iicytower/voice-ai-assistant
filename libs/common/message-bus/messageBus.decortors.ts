@@ -1,5 +1,5 @@
+import { EventPattern, MessagePattern } from './comunication';
 import { EVENT_HANDLER, MESSAGE_HANDLER } from './messageBus.constants';
-import { EventPattern, MessagePattern } from './messageBus.types';
 
 export function OnMessage(pattern: MessagePattern): MethodDecorator {
   return (target, propertyKey) => {
