@@ -5,6 +5,7 @@ import { EVENT_HANDLER, MESSAGE_HANDLER } from './messageBus.constants';
 import { instanceToPlain, plainToClass } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { EventPattern, MessagePattern, VALIDATION_MAP } from './comunication';
+import { BaseOutputDto } from './dto';
 
 /**
  * stworzyć obiekty podobne do:
@@ -64,13 +65,24 @@ export class MessageBus implements OnModuleInit {
     }
   }
 
-  async send<T = any, R = any>(pattern: MessagePattern, message: T): Promise<R> {
+  async send(pattern: MessagePattern, data: Record<string, any>): Promise<BaseOutputDto> {
     const handler = this.messageHandlers.get(pattern);
     if (!handler) {
       throw new Error(`No message handler for pattern "${pattern}"`);
     }
 
-    return await handler(message);
+    const validationMapItem = this.getValidationMapItem(pattern);
+    if (!validationMapItem) {
+      throw new Error(`No validation map item for pattern "${pattern}"`);
+    }
+
+    const validatedData = await this.validateDto(validationMapItem.input, data);
+
+    const result = await handler(validatedData);
+
+    const validatedResult = await this.validateDto(validationMapItem.output, result);
+
+    return validatedResult;
   }
 
   async emit<T = any>(pattern: EventPattern, event: T): Promise<void> {
